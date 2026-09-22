@@ -18,10 +18,9 @@ val allAbis = listOf("arm64-v8a", "armeabi-v7a", "x86_64")
 // v$appVersionName and publish the release; see .github/workflows/apk.yml.
 //
 // versionCode is derived so it can never fail to increase -- Play rejects any
-// upload whose versionCode did not go up. major*10000 + minor*100 + patch keeps
-// minor and patch below 100, and yields 31 for 0.0.31, matching what shipped
-// before this was automated.
-val appVersionName = "0.0.31"
+// upload whose versionCode did not go up. major*10000 + minor*100 + patch, so
+// minor and patch must stay below 100.
+val appVersionName = "1.0.0"
 val appVersionCode = appVersionName.split(".").map(String::toInt)
     .let { (major, minor, patch) -> major * 10000 + minor * 100 + patch }
 

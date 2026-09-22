@@ -57,10 +57,10 @@ CMake is used for native C/C++ components under [`app/src/main/cpp`](app/src/mai
 Releases are automated. Bump `appVersionName` in [`app/build.gradle.kts`](app/build.gradle.kts) and push it to `main`:
 
 ```kotlin
-val appVersionName = "0.0.32"
+val appVersionName = "1.0.1"
 ```
 
-[`.github/workflows/apk.yml`](.github/workflows/apk.yml) then tags `v0.0.32`, builds the APK and AAB, verifies the signature with `apksigner`, and publishes a GitHub Release with `SHA256SUMS.txt` and generated notes. Pushing to `main` without changing the version does nothing, so only a deliberate bump cuts a release.
+[`.github/workflows/apk.yml`](.github/workflows/apk.yml) then tags `v1.0.1`, builds the APK and AAB, verifies the signature with `apksigner`, and publishes a GitHub Release with `SHA256SUMS.txt` and generated notes. Pushing to `main` without changing the version does nothing, so only a deliberate bump cuts a release.
 
 `versionCode` is derived from `appVersionName` as `major*10000 + minor*100 + patch`, so it always increases; Play rejects uploads whose `versionCode` did not. Keep minor and patch below 100.
 
