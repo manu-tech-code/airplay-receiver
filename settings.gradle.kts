@@ -5,6 +5,9 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
 
 @Suppress("UnstableApiUsage")
 dependencyResolutionManagement {
@@ -15,5 +18,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AirPlayServer"
+rootProject.name = "AirPlayReceiver"
 include(":app")

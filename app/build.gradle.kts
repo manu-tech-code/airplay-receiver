@@ -16,7 +16,7 @@ val allAbis = listOf("arm64-v8a", "armeabi-v7a", "x86_64")
 
 android {
     namespace = "io.github.jqssun.airplay"
-    compileSdk = 36
+    compileSdk = 37
     ndkVersion = "27.0.12077973"
 
     if (localProps.containsKey("storeFile")) {
