@@ -10,8 +10,6 @@ This is a fork of [jqssun/android-airplay-server](https://github.com/jqssun/andr
 
 Builds are published to [GitHub Releases](https://github.com/manu-tech-code/airplay-receiver/releases).
 
-<video loop src='https://github.com/user-attachments/assets/79ed7c0c-0102-43cc-8816-4f00ce6a4199' alt="demo" width="200" style="display: block; margin: auto;"></video>
-
 ## Compatibility
 
 - Android 7.0+, including Android TV
