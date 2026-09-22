@@ -77,8 +77,8 @@ class VideoRenderer(ctx: Context) {
     fun maxResolution(): Pair<Int, Int> =
         listOfNotNull(avcDecoder?.let { it to DecoderSelector.AVC }, hevcDecoder?.let { it to DecoderSelector.HEVC })
             .map { (info, mime) ->
-                runCatching { info.videoCaps(mime).let { it.supportedWidths.upper to it.supportedHeights.upper } }
-                    .getOrDefault(1920 to 1080)
+                runCatching { info.videoCaps(mime)?.let { it.supportedWidths.upper to it.supportedHeights.upper } }
+                    .getOrNull() ?: (1920 to 1080)
             }
             .reduceOrNull { (w1, h1), (w2, h2) -> minOf(w1, w2) to minOf(h1, h2) } ?: (1920 to 1080)
 

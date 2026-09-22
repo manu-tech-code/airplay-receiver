@@ -67,7 +67,8 @@ class DecoderSelector(private val ctx: Context) {
         if (_hevcWhitelisted(info)) return info
         Log.i(TAG, "hevc decoder not whitelisted: ${info.name}")
         val avcCaps = avc?.videoCaps(AVC) ?: return null
-        return info.takeIf { !_canMeet(avcCaps, w, h, fps) && _canMeet(info.videoCaps(HEVC), w, h, fps) }
+        val hevcCaps = info.videoCaps(HEVC) ?: return null
+        return info.takeIf { !_canMeet(avcCaps, w, h, fps) && _canMeet(hevcCaps, w, h, fps) }
     }
 
     fun software(mime: String, w: Int, h: Int): MediaCodecInfo? =
@@ -78,7 +79,11 @@ class DecoderSelector(private val ctx: Context) {
                     it.startsWith("omx.google.") || it.startsWith("c2.android.") ||
                         (!it.startsWith("omx.") && !it.startsWith("c2."))
                 })
-        }?.takeIf { _portraitSafe(w, h, it.videoCaps(mime)::isSizeSupported) }
+        }?.takeIf { info ->
+            info.videoCaps(mime)?.let { caps ->
+                _portraitSafe(w, h, caps::isSizeSupported)
+            } ?: false
+        }
 
     fun adaptive(info: MediaCodecInfo, mime: String) = !_inList(noAdaptive, info.name) &&
         runCatching { info.getCapabilitiesForType(mime).isFeatureSupported(CodecCapabilities.FEATURE_AdaptivePlayback) }
@@ -195,6 +200,6 @@ class DecoderSelector(private val ctx: Context) {
             listOf("omx.amlogic", "c2.amlogic") to mapOf("vendor.low-latency.enable" to 1),
         )
 
-        fun MediaCodecInfo.videoCaps(mime: String): VideoCapabilities = getCapabilitiesForType(mime).videoCapabilities
+        fun MediaCodecInfo.videoCaps(mime: String): VideoCapabilities? = getCapabilitiesForType(mime)?.videoCapabilities
     }
 }
