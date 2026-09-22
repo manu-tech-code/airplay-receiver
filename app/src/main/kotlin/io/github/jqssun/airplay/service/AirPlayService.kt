@@ -205,6 +205,7 @@ class AirPlayService : LifecycleService(), RaopCallbackHandler, LogListener {
         return LocalBinder()
     }
 
+    @OptIn(kotlinx.coroutines.FlowPreview::class)   // debounce()
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()

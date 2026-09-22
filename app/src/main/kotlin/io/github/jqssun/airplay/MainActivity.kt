@@ -145,9 +145,12 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && _shouldAutoPip()) enterPip()
     }
 
-    override fun onPictureInPictureModeChanged(inPip: Boolean, newConfig: Configuration) {
-        super.onPictureInPictureModeChanged(inPip, newConfig)
-        isInPip.value = inPip
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration,
+    ) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        isInPip.value = isInPictureInPictureMode
     }
 
     override fun onStop() {
