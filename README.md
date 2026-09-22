@@ -50,10 +50,9 @@ flowchart LR
     UxPlay --> AndroidApp
 ```
 
-CMake is used for native C/C++ components under [`app/src/main/cpp`](app/src/main/cpp). Submodules must be initialized before building. 
+CMake is used for native C/C++ components under [`app/src/main/cpp`](app/src/main/cpp). All native dependencies (UxPlay, FFmpeg, libplist, OpenSSL) are vendored in-tree under [`app/src/main/cpp/third_party`](app/src/main/cpp/third_party), so there are no submodules to initialize and the build makes no network requests for source. See [PROVENANCE.md](app/src/main/cpp/third_party/PROVENANCE.md) for upstream revisions and local modifications.
 
 ```bash
-git submodule update --init --recursive
 ./gradlew assembleDebug
 ```
 

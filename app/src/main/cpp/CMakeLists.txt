@@ -9,12 +9,20 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffile-prefix-map=${CMAKE_SOURCE_DIR}=. 
 
 set(UXPLAY_LIB third_party/UxPlay/lib)
 
-# ---------- OpenSSL (built from source via openssl-cmake) ----------
+# ---------- OpenSSL (built from vendored source via openssl-cmake) ----------
+# Source lives in third_party/openssl (see third_party/PROVENANCE.md). The
+# upstream openssl-cmake fetches a tarball over the network; it is pointed at
+# the vendored tree instead so the build never leaves this repo.
 set(BUILD_OPENSSL ON CACHE BOOL "" FORCE)
 set(OPENSSL_BUILD_VERSION "3.4.4" CACHE STRING "" FORCE)
+set(OPENSSL_VENDORED_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/openssl"
+    CACHE PATH "In-tree OpenSSL source" FORCE)
 set(CROSS_ANDROID ON CACHE BOOL "" FORCE)
 string(REGEX MATCH "[0-9]+" AIRPLAY_ANDROID_API "${ANDROID_PLATFORM}")
-set(OPENSSL_PARAMS "-D__ANDROID_API__=${AIRPLAY_ANDROID_API}" CACHE STRING "" FORCE)
+# no-tests: the vendored tree drops OpenSSL's test/ and demos/ dirs, so Configure
+# must not descend into them (openssl-cmake never runs `make test` when
+# CROSS_ANDROID is set -- it forces COMMAND_TEST to a no-op).
+set(OPENSSL_PARAMS "-D__ANDROID_API__=${AIRPLAY_ANDROID_API} no-tests" CACHE STRING "" FORCE)
 set(FORWARD_ANDROID_NDK_ROOT "${ANDROID_NDK}" CACHE STRING "" FORCE) # CI
 
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -40,7 +48,7 @@ find_package(oboe REQUIRED CONFIG)
 # ---------- ffmpeg (software ALAC decoder) ----------
 include(BuildFFmpeg)
 
-# ---------- libplist (built from submodule source) ----------
+# ---------- libplist (built from vendored source) ----------
 set(PLIST_SRC third_party/libplist/src)
 set(PLIST_CNARY third_party/libplist/libcnary)
 

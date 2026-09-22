@@ -95,26 +95,10 @@ android {
     }
 }
 
-tasks.register("applyUxplayPatches") {
-    doLast {
-        fun git(vararg args: String): String {
-            val proc = ProcessBuilder("git", "-C", "$projectDir/src/main/cpp/third_party/UxPlay", *args)
-                .redirectErrorStream(true).start()
-            val out = proc.inputStream.bufferedReader().readText()
-            check(proc.waitFor() == 0) { "git ${args.joinToString(" ")} failed:\n$out" }
-            return out
-        }
-        val patches = file("src/main/cpp/patches/UxPlay").listFiles { f -> f.extension == "patch" }!!.sorted()
-        val touched = patches.flatMap { git("apply", "--numstat", it.path).trim().lines() }
-            .map { it.substringAfterLast("\t") }.distinct()
-        git("checkout", "--", *touched.toTypedArray())
-        patches.forEach { git("apply", "--unidiff-zero", it.path) }
-    }
-}
-
-tasks.configureEach {
-    if (name.startsWith("configureCMake")) dependsOn("applyUxplayPatches")
-}
+// UxPlay patches are baked into the vendored source at
+// src/main/cpp/third_party/UxPlay. The .patch files under src/main/cpp/patches/UxPlay
+// are kept only as a record of how that tree diverges from upstream FDH2/UxPlay
+// (see src/main/cpp/third_party/PROVENANCE.md); nothing applies them at build time.
 
 tasks.withType<Zip>().configureEach {
     isReproducibleFileOrder = true
