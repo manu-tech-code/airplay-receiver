@@ -1,16 +1,14 @@
 # AirPlay Receiver for Android
 
-[![Stars](https://img.shields.io/github/stars/jqssun/android-airplay-server)](https://github.com/jqssun/android-airplay-server)
-[![GitHub](https://img.shields.io/github/downloads/jqssun/android-airplay-server/total?label=GitHub&logo=GitHub)](https://github.com/jqssun/android-airplay-server/releases)
-[![license](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/jqssun/android-airplay-server/blob/main/LICENSE)
-[![build](https://img.shields.io/github/actions/workflow/status/jqssun/android-airplay-server/apk.yml?label=build)](https://github.com/jqssun/android-airplay-server/actions/workflows/apk.yml)
-[![release](https://img.shields.io/github/v/release/jqssun/android-airplay-server)](https://github.com/jqssun/android-airplay-server/releases)
+[![license](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![build](https://img.shields.io/github/actions/workflow/status/manu-tech-code/airplay-receiver/apk.yml?label=build)](https://github.com/manu-tech-code/airplay-receiver/actions/workflows/apk.yml)
+[![release](https://img.shields.io/github/v/release/manu-tech-code/airplay-receiver)](https://github.com/manu-tech-code/airplay-receiver/releases)
 
-A fully featured free and open-source implementation of AirPlay for Android that turns your device into an AirPlay-compatible display and speaker, based on [UxPlay](https://github.com/FDH2/UxPlay). It is the first open-source AirPlay 2 receiver for Android and Android TV, and works with iOS/iPadOS, macOS devices as well as other sender implementations.
+A free and open-source implementation of AirPlay for Android that turns your device into an AirPlay-compatible display and speaker. It works with iOS/iPadOS and macOS devices as well as other sender implementations.
 
-[<img height="48" alt="Get it on Google Play" src="https://jqssun.github.io/images/badges/google-play-store.svg">](https://play.google.com/store/apps/details?id=io.github.jqssun.airplay)
-[<img height="48" alt="Get it on F-Droid" src="https://jqssun.github.io/images/badges/fdroid.svg">](https://f-droid.org/packages/io.github.jqssun.airplay)
-[<img height="48" alt="Get it on GitHub" src="https://jqssun.github.io/images/badges/github.svg">](https://github.com/jqssun/android-airplay-server/releases/latest)
+This is a fork of [jqssun/android-airplay-server](https://github.com/jqssun/android-airplay-server), which is itself built on the [UxPlay](https://github.com/FDH2/UxPlay) AirPlay/RAOP implementation.
+
+Builds are published to [GitHub Releases](https://github.com/manu-tech-code/airplay-receiver/releases).
 
 <video loop src='https://github.com/user-attachments/assets/79ed7c0c-0102-43cc-8816-4f00ce6a4199' alt="demo" width="200" style="display: block; margin: auto;"></video>
 
@@ -56,10 +54,13 @@ CMake is used for native C/C++ components under [`app/src/main/cpp`](app/src/mai
 ./gradlew assembleDebug
 ```
 
-Check out the [CI](https://github.com/jqssun/android-airplay-server/blob/main/.github/workflows/apk.yml) for more details on reproducible builds.
+Releases are built by [`.github/workflows/apk.yml`](.github/workflows/apk.yml), which is triggered by pushing a `v*.*.*` tag. It verifies the APK signature with `apksigner` and publishes `SHA256SUMS.txt` alongside the artifacts. Every push additionally runs [`just_build.yml`](.github/workflows/just_build.yml), which uploads an APK and AAB as workflow artifacts.
+
+Signing uses two repository secrets, `STORE` and `LOCAL`, created once via [`scripts/ci-keystore.sh`](scripts/ci-keystore.sh).
 
 ## Credits
 
+- [android-airplay-server](https://github.com/jqssun/android-airplay-server) by jqssun, the project this is forked from
 - [UxPlay](https://github.com/FDH2/UxPlay) for the AirPlay/RAOP server implementation
 - [FFmpeg](https://ffmpeg.org) for the lossless audio decoder
 - [Next Player](https://github.com/anilbeesetti/nextplayer) for the video player
