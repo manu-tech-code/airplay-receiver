@@ -14,6 +14,17 @@ val localProps = Properties().apply {
 
 val allAbis = listOf("arm64-v8a", "armeabi-v7a", "x86_64")
 
+// The one line to edit for a release. Pushing this change to main makes CI tag
+// v$appVersionName and publish the release; see .github/workflows/apk.yml.
+//
+// versionCode is derived so it can never fail to increase -- Play rejects any
+// upload whose versionCode did not go up. major*10000 + minor*100 + patch keeps
+// minor and patch below 100, and yields 31 for 0.0.31, matching what shipped
+// before this was automated.
+val appVersionName = "0.0.31"
+val appVersionCode = appVersionName.split(".").map(String::toInt)
+    .let { (major, minor, patch) -> major * 10000 + minor * 100 + patch }
+
 android {
     namespace = "com.manutechcode.airplay"
     compileSdk = 37
@@ -37,8 +48,8 @@ android {
         applicationId = "com.manutechcode.airplay"
         minSdk = 24
         targetSdk = 36
-        versionCode = 31
-        versionName = "0.0.31"
+        versionCode = appVersionCode
+        versionName = appVersionName
 
         externalNativeBuild {
             cmake {

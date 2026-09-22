@@ -52,7 +52,21 @@ CMake is used for native C/C++ components under [`app/src/main/cpp`](app/src/mai
 ./gradlew assembleDebug
 ```
 
-Releases are built by [`.github/workflows/apk.yml`](.github/workflows/apk.yml), which is triggered by pushing a `v*.*.*` tag. It verifies the APK signature with `apksigner` and publishes `SHA256SUMS.txt` alongside the artifacts. Every push additionally runs [`just_build.yml`](.github/workflows/just_build.yml), which uploads an APK and AAB as workflow artifacts.
+### Releasing
+
+Releases are automated. Bump `appVersionName` in [`app/build.gradle.kts`](app/build.gradle.kts) and push it to `main`:
+
+```kotlin
+val appVersionName = "0.0.32"
+```
+
+[`.github/workflows/apk.yml`](.github/workflows/apk.yml) then tags `v0.0.32`, builds the APK and AAB, verifies the signature with `apksigner`, and publishes a GitHub Release with `SHA256SUMS.txt` and generated notes. Pushing to `main` without changing the version does nothing, so only a deliberate bump cuts a release.
+
+`versionCode` is derived from `appVersionName` as `major*10000 + minor*100 + patch`, so it always increases; Play rejects uploads whose `versionCode` did not. Keep minor and patch below 100.
+
+Tagging by hand still works, as does the workflow's manual dispatch, but both require the tag to match `appVersionName`. The tag is created only after the artifacts build, so a failed build never leaves a tag pointing at an unreleased commit.
+
+Every push to any branch also runs [`just_build.yml`](.github/workflows/just_build.yml), which uploads an APK and AAB as workflow artifacts without releasing.
 
 Signing uses two repository secrets, `STORE` and `LOCAL`, created once via [`scripts/ci-keystore.sh`](scripts/ci-keystore.sh).
 
