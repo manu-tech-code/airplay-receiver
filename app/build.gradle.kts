@@ -22,7 +22,10 @@ android {
     if (localProps.containsKey("storeFile")) {
         signingConfigs {
             create("release") {
-                storeFile = file(localProps.getProperty("storeFile"))
+                // local.properties lives at the repo root, so a relative
+                // storeFile is resolved from there. Plain file() would
+                // resolve it against app/ and miss a root-level keystore.
+                storeFile = rootProject.file(localProps.getProperty("storeFile"))
                 storePassword = localProps.getProperty("storePassword")
                 keyAlias = localProps.getProperty("keyAlias")
                 keyPassword = localProps.getProperty("keyPassword")
