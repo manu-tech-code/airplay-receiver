@@ -1,10 +1,10 @@
 package io.github.jqssun.airplay.ui
 
-import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.annotation.OptIn as AndroidxOptIn
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
@@ -130,7 +130,7 @@ fun MainScreen(
         if (videoPlaybackActive) fullscreen = false
     }
 
-    val activity = LocalContext.current as? Activity
+    val activity = LocalActivity.current
     val videoScreen = videoPlaybackActive || videoSessionPending
     LaunchedEffect(fullscreen, videoScreen) {
         val window = activity?.window ?: return@LaunchedEffect

@@ -30,6 +30,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import androidx.annotation.RequiresApi
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -123,6 +124,7 @@ class MainActivity : ComponentActivity() {
         enterPictureInPictureMode(_pipParams())
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun _pipParams(): PictureInPictureParams {
         val aspect = if (viewModel.videoPlaybackActive.value) viewModel.videoPlaybackAspect.value
             else viewModel.videoAspect.value

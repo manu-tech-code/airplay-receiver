@@ -579,6 +579,7 @@ class AirPlayService : LifecycleService(), RaopCallbackHandler, LogListener {
         log(message)
     }
 
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     override fun onDestroy() {
         stopServer()
         dacpPlayer.release()
