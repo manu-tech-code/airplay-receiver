@@ -1,59 +1,150 @@
-name: Generate APK
+name: Release
 
-env:
-  main_project_module: app
-
+# A release is cut by bumping appVersionName in app/build.gradle.kts and
+# pushing that to main. CI tags v<version> and publishes the release in the
+# same run -- a tag pushed with GITHUB_TOKEN does not trigger other workflows,
+# so tagging cannot be split from building.
+#
+# Pushing a v*.*.* tag by hand, or dispatching manually, also works.
 on:
   push:
-    branches:
-      - "release/**"
-    tags:
-      - "v*.*.*"
+    branches: [main]
+    tags: ["v*.*.*"]
   workflow_dispatch:
     inputs:
       version:
-        description: "v*.*.*"
-        required: true
+        description: "v*.*.* (blank = use appVersionName)"
+        required: false
         type: string
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # need existing tags to detect an already-released version
 
-      - name: Set TAG
-        if: github.event_name == 'push'
+      - name: Resolve version
+        id: ver
         run: |
-          echo "version=$(echo '${{ github.ref_name }}' | awk -F 'v' '{print $2}')" >> $GITHUB_ENV
+          set -euo pipefail
+          declared=$(grep -oE 'val appVersionName = "[^"]+"' app/build.gradle.kts \
+                     | head -1 | sed 's/.*"\(.*\)"/\1/')
+          input="${{ inputs.version }}"
 
-      - name: Set TAG
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          echo "version=$(echo '${{ inputs.version }}' | awk -F 'v' '{print $2}')" >> $GITHUB_ENV
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            version="${GITHUB_REF_NAME#v}"
+            # A hand-pushed tag that disagrees with the manifest would ship a
+            # release whose in-app version does not match its name.
+            if [ "$version" != "$declared" ]; then
+              echo "::error::Tag v$version does not match appVersionName $declared"
+              exit 1
+            fi
+            release=true
+          elif [ -n "$input" ]; then
+            version="${input#v}"
+            [ "$version" = "$declared" ] || {
+              echo "::error::Requested v$version but appVersionName is $declared"; exit 1; }
+            release=true
+          else
+            version="$declared"
+            if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+              echo "v$version is already released; nothing to do."
+              release=false
+            else
+              release=true
+            fi
+          fi
+
+          if ! printf '%s' "$version" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Version '$version' is not <major>.<minor>.<patch>"; exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          echo "Resolved version=$version release=$release"
 
       - name: Use JDK
-        uses: actions/setup-java@v4
+        if: steps.ver.outputs.release == 'true'
+        uses: actions/setup-java@v5
         with:
           distribution: "zulu"
           java-version: "21"
           cache: "gradle"
 
-      - name: Build
+      - name: Check signing secrets
+        if: steps.ver.outputs.release == 'true'
+        env:
+          STORE: ${{ secrets.STORE }}
+          LOCAL: ${{ secrets.LOCAL }}
         run: |
+          missing=""
+          [ -z "$STORE" ] && missing="$missing STORE"
+          [ -z "$LOCAL" ] && missing="$missing LOCAL"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing"
+            echo "Create them once with: ./scripts/ci-keystore.sh"
+            exit 1
+          fi
+
+      - name: Build
+        if: steps.ver.outputs.release == 'true'
+        env:
+          STORE: ${{ secrets.STORE }}
+          LOCAL: ${{ secrets.LOCAL }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$STORE" | base64 -d > upload.jks
+          printf '%s' "$LOCAL" | base64 -d > local.properties
           export SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)
-          echo ${{ secrets.STORE }} | base64 -d > upload.jks
-          echo ${{ secrets.LOCAL }} | base64 -d > local.properties
-          chmod +x ./gradlew;
+          chmod +x ./gradlew
           ./gradlew assembleRelease bundleRelease --stacktrace
-          rm upload.jks local.properties
+
+      - name: Remove signing material
+        if: always()
+        run: rm -f upload.jks local.properties
+
+      - name: Verify APK is signed
+        if: steps.ver.outputs.release == 'true'
+        run: |
+          set -euo pipefail
+          BT=$(ls /usr/local/lib/android/sdk/build-tools/ | sort -V | tail -n 1)
+          "/usr/local/lib/android/sdk/build-tools/$BT/apksigner" verify --print-certs \
+            app/build/outputs/apk/release/app-release.apk
+
+      - name: Checksums
+        if: steps.ver.outputs.release == 'true'
+        run: |
+          set -euo pipefail
+          sha256sum app/build/outputs/apk/release/app-release.apk \
+                    app/build/outputs/bundle/release/app-release.aab \
+            | sed 's#.*/##' > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      # Tag only after the artifacts exist, so a failed build never leaves a
+      # tag pointing at a commit that was never released.
+      - name: Tag
+        if: steps.ver.outputs.release == 'true' && github.ref_type != 'tag'
+        env:
+          V: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$V" -m "v$V"
+          git push origin "v$V"
 
       - name: Publish (GitHub)
+        if: steps.ver.outputs.release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          name: v${{ env.version }}
-          tag_name: v${{ env.version }}
+          name: v${{ steps.ver.outputs.version }}
+          tag_name: v${{ steps.ver.outputs.version }}
+          generate_release_notes: true
           files: |
-            ${{ env.main_project_module }}/build/outputs/apk/release/app-release.apk
-            ${{ env.main_project_module }}/build/outputs/bundle/release/app-release.aab
+            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/bundle/release/app-release.aab
+            SHA256SUMS.txt

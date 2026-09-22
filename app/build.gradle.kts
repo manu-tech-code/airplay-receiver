@@ -14,15 +14,28 @@ val localProps = Properties().apply {
 
 val allAbis = listOf("arm64-v8a", "armeabi-v7a", "x86_64")
 
+// The one line to edit for a release. Pushing this change to main makes CI tag
+// v$appVersionName and publish the release; see .github/workflows/apk.yml.
+//
+// versionCode is derived so it can never fail to increase -- Play rejects any
+// upload whose versionCode did not go up. major*10000 + minor*100 + patch, so
+// minor and patch must stay below 100.
+val appVersionName = "1.0.0"
+val appVersionCode = appVersionName.split(".").map(String::toInt)
+    .let { (major, minor, patch) -> major * 10000 + minor * 100 + patch }
+
 android {
-    namespace = "io.github.jqssun.airplay"
+    namespace = "com.manutechcode.airplay"
     compileSdk = 37
     ndkVersion = "27.0.12077973"
 
     if (localProps.containsKey("storeFile")) {
         signingConfigs {
             create("release") {
-                storeFile = file(localProps.getProperty("storeFile"))
+                // local.properties lives at the repo root, so a relative
+                // storeFile is resolved from there. Plain file() would
+                // resolve it against app/ and miss a root-level keystore.
+                storeFile = rootProject.file(localProps.getProperty("storeFile"))
                 storePassword = localProps.getProperty("storePassword")
                 keyAlias = localProps.getProperty("keyAlias")
                 keyPassword = localProps.getProperty("keyPassword")
@@ -31,11 +44,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "io.github.jqssun.airplay"
+        applicationId = "com.manutechcode.airplay"
         minSdk = 24
         targetSdk = 36
-        versionCode = 31
-        versionName = "0.0.31"
+        versionCode = appVersionCode
+        versionName = appVersionName
 
         externalNativeBuild {
             cmake {

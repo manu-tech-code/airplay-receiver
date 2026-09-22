@@ -10,3 +10,16 @@
 .cxx/
 
 *.jks
+
+# Never commit these (repo is public)
+.env
+.env.*
+*.keystore
+*.p12
+*.jks.bak
+keystore.properties
+signing.properties
+
+# Merge/patch tool leftovers
+*.orig
+*.rej

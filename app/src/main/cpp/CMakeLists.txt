@@ -22,7 +22,12 @@ string(REGEX MATCH "[0-9]+" AIRPLAY_ANDROID_API "${ANDROID_PLATFORM}")
 # no-tests: the vendored tree drops OpenSSL's test/ and demos/ dirs, so Configure
 # must not descend into them (openssl-cmake never runs `make test` when
 # CROSS_ANDROID is set -- it forces COMMAND_TEST to a no-op).
-set(OPENSSL_PARAMS "-D__ANDROID_API__=${AIRPLAY_ANDROID_API} no-tests" CACHE STRING "" FORCE)
+#
+# __ANDROID_API__ is deliberately NOT passed here: the NDK's API-versioned clang
+# wrapper already defines it (as __ANDROID_MIN_SDK_VERSION__), so defining it
+# again produced a -Wmacro-redefined warning on every OpenSSL translation unit
+# -- over 5000 of them per build.
+set(OPENSSL_PARAMS "no-tests" CACHE STRING "" FORCE)
 set(FORWARD_ANDROID_NDK_ROOT "${ANDROID_NDK}" CACHE STRING "" FORCE) # CI
 
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -67,7 +72,10 @@ add_library(plist STATIC
     ${PLIST_SRC}/ptrarray.c
     ${PLIST_SRC}/time64.c
     ${PLIST_SRC}/xplist.c
-    ${PLIST_CNARY}/cnary.c
+    # cnary.c is libcnary's standalone demo (it defines main() and nothing
+    # else). Upstream's libcnary_la_SOURCES lists only node.c and node_list.c;
+    # compiling the demo in put a stray main() in the static library and
+    # produced every -Wincompatible-pointer-types warning in the build.
     ${PLIST_CNARY}/node.c
     ${PLIST_CNARY}/node_list.c
 )
